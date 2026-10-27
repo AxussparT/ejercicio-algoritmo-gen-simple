@@ -1,0 +1,34 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261025_120658_Rosenbrock_1D___Valle
+Fecha y Hora:    2026-10-25 12:06:58
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Rosenbrock 1D / Valle
+Expresión f(x):  (1 - x)**2 + 100 * (x - x**2)**2
+Intervalo [a,b]: (-2.0, 2.0)
+Objetivo:        MINIMIZE
+Semilla:         None
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       40
+Generaciones:    60
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 10}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 1.00000000
+Mejor f(x):              0.00000000
+Mejor Aptitud (Fitness): 15.65805527
+Generación del hallazgo: 46
+Evaluaciones totales:    2440
+Tiempo de ejecución:     1.4096 segundos
+Interrupción anticipada: No
+======================================================================

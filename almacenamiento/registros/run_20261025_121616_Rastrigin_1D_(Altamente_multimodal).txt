@@ -1,0 +1,34 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261025_121616_Rastrigin_1D_(Altamente_multimodal)
+Fecha y Hora:    2026-10-25 12:16:16
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Rastrigin 1D (Altamente multimodal)
+Expresión f(x):  10 + x**2 - 10 * cos(2 * pi * x)
+Intervalo [a,b]: (-5.12, 5.12)
+Objetivo:        MINIMIZE
+Semilla:         100
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       50
+Generaciones:    80
+Prob. Cruce:     0.9
+Prob. Mutación:  0.15
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Ranking lineal -> {'a_max': 1.3}
+Cruce:           BLX-α -> {'alpha': 0.7}
+Mutación:        No uniforme -> {'b': 2.0}
+Sustitución:     Factor de crowding -> {'cf': 4}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 -0.01036904
+Mejor f(x):              0.02132300
+Mejor Aptitud (Fitness): 42.32513418
+Generación del hallazgo: 29
+Evaluaciones totales:    4050
+Tiempo de ejecución:     1.8348 segundos
+Interrupción anticipada: No
+======================================================================
