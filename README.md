@@ -1,6 +1,8 @@
-# Algoritmo Genético Configurable para Optimización Univariada $f(x)$
+# Algoritmo Genético Configurable para Optimización (1D hasta N-D)
 
-Aplicación modular en Python para la optimización de funciones univariadas $f(x)$ que implementa **todos los métodos evolutivos** documentados en el archivo `05_hiperparametros`.
+Aplicación modular en Python para la optimización de funciones matemáticas unipropósito en **dimensiones arbitrarias (1D, 2D, ... N-D)** que implementa **todos los métodos evolutivos** documentados en el archivo `05_hiperparametros`.
+
+Cuenta con **detección automática de dimensiones** en tiempo real al escribir la fórmula (reconoce `x1, x2, ...`, `x, y, z`, `x[0], x[1]`, etc.) y una **entrada manual de dimensiones** con control spinbox justo debajo de la expresión para libertad total del usuario.
 
 ---
 

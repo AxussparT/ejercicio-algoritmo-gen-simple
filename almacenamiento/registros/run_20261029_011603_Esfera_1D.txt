@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261029_011603_Esfera_1D
+Fecha y Hora:    2026-10-29 01:16:03
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Esfera 1D
+Expresión f(x):  x**2
+Dimensiones (n): 1
+Intervalo [a,b]: (-5.0, 5.0)
+Objetivo:        MINIMIZE
+Semilla:         42
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       30
+Generaciones:    40
+Prob. Cruce:     0.8
+Prob. Mutación:  0.15
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 3}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 2.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 0.00000000
+Mejor f(x):              0.00000000
+Mejor Aptitud (Fitness): 1.00000000
+Generación del hallazgo: 40
+Evaluaciones totales:    1230
+Tiempo de ejecución:     0.0796 segundos
+Interrupción anticipada: No
+======================================================================

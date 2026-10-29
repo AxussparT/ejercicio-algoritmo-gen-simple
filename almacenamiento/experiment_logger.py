@@ -37,6 +37,7 @@ class ExperimentLogger:
             "configuration": {
                 "function_name": config.get("function_name", "Personalizada"),
                 "expression": config.get("expression", "x**2"),
+                "dimensions": config.get("dimensions", 1),
                 "bounds": config.get("bounds", [(-10.0, 10.0)]),
                 "goal": config.get("goal", "minimize"),
                 "pop_size": config.get("pop_size", 40),
@@ -88,6 +89,7 @@ class ExperimentLogger:
             f.write("--- CONFIGURACIÓN DEL PROBLEMA ---\n")
             f.write(f"Función:         {cfg['function_name']}\n")
             f.write(f"Expresión f(x):  {cfg['expression']}\n")
+            f.write(f"Dimensiones (n): {cfg.get('dimensions', 1)}\n")
             f.write(f"Intervalo [a,b]: {cfg['bounds'][0]}\n")
             f.write(f"Objetivo:        {cfg['goal'].upper()}\n")
             f.write(f"Semilla:         {cfg['seed']}\n\n")
@@ -102,7 +104,13 @@ class ExperimentLogger:
             f.write(f"Mutación:        {cfg['mutation_method']} -> {cfg['mutation_params']}\n")
             f.write(f"Sustitución:     {cfg['replacement_method']} -> {cfg['replacement_params']}\n\n")
             f.write("--- RESULTADOS NUMÉRICOS OBTENIDOS ---\n")
-            f.write(f"Mejor x:                 {res['best_x']:.8f}\n" if res['best_x'] is not None else "Mejor x: N/A\n")
+            if res['best_x'] is not None:
+                if isinstance(res['best_x'], (int, float)):
+                    f.write(f"Mejor x:                 {res['best_x']:.8f}\n")
+                else:
+                    f.write(f"Mejor x (vector):        {res['best_x']}\n")
+            else:
+                f.write("Mejor x:                 N/A\n")
             f.write(f"Mejor f(x):              {res['best_fx']:.8f}\n" if res['best_fx'] is not None else "Mejor f(x): N/A\n")
             f.write(f"Mejor Aptitud (Fitness): {res['best_fitness']:.8f}\n" if res['best_fitness'] is not None else "Fitness: N/A\n")
             f.write(f"Generación del hallazgo: {res['best_generation']}\n")

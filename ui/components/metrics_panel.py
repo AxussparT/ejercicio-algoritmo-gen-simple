@@ -58,7 +58,7 @@ class MetricsPanel(ttk.Frame):
     def update_metrics(
         self,
         status: str,
-        best_x: Optional[float] = None,
+        best_x: Any = None,
         best_fx: Optional[float] = None,
         best_fitness: Optional[float] = None,
         current_gen: int = 0,
@@ -68,7 +68,17 @@ class MetricsPanel(ttk.Frame):
     ):
         self.status_var.set(status)
         if best_x is not None:
-            self.best_x_var.set(f"{best_x:.6f}")
+            if isinstance(best_x, (int, float)):
+                self.best_x_var.set(f"{best_x:.6f}")
+            elif isinstance(best_x, (list, tuple)):
+                if len(best_x) <= 3:
+                    s = ", ".join(f"{v:.3f}" for v in best_x)
+                    self.best_x_var.set(f"[{s}]")
+                else:
+                    s = f"[{best_x[0]:.2f}, {best_x[1]:.2f}, ...]"
+                    self.best_x_var.set(s)
+            else:
+                self.best_x_var.set(str(best_x))
         if best_fx is not None:
             self.best_fx_var.set(f"{best_fx:.6f}")
         if best_fitness is not None:

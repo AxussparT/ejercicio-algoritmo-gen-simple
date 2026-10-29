@@ -1,15 +1,16 @@
 """
 Gestión y evaluación de la población.
 Conversión de f(x) a aptitud positiva (fitness) para Minimización y Maximización.
+Soporta problemas de n dimensiones.
 """
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Any
 import numpy as np
 from .individual import Individual
 
 class Population:
     def __init__(self, size: int, bounds: List[Tuple[float, float]], seed: int = None):
         self.size = size
-        self.bounds = bounds
+        self.bounds = list(bounds)
         if seed is not None:
             np.random.seed(seed)
         self.individuals: List[Individual] = []
@@ -25,7 +26,7 @@ class Population:
             ind = Individual(np.array(genes), self.bounds)
             self.individuals.append(ind)
 
-    def evaluate(self, eval_func: Callable[[float], float], goal: str = "minimize") -> int:
+    def evaluate(self, eval_func: Callable[[Any], float], goal: str = "minimize") -> int:
         """
         Evalúa f(x) para cada individuo y calcula su fitness positivo y rango.
         Retorna el número de evaluaciones realizadas.
@@ -34,8 +35,8 @@ class Population:
         obj_values = []
         for ind in self.individuals:
             val = eval_func(ind.x)
-            ind.objective_value = val
-            obj_values.append(val)
+            ind.objective_value = float(val)
+            obj_values.append(ind.objective_value)
             n_evals += 1
 
         obj_arr = np.array(obj_values, dtype=float)
@@ -87,8 +88,11 @@ class Population:
         fits = np.array([ind.fitness for ind in self.individuals])
         best_ind = self.best_individual(goal)
 
+        best_x_rep = float(best_ind.x) if len(best_ind.genes) == 1 else best_ind.x_list
+
         return {
-            "best_x": float(best_ind.x),
+            "best_x": best_x_rep,
+            "best_x_formatted": best_ind.x_formatted,
             "best_fx": float(best_ind.objective_value),
             "best_fitness": float(best_ind.fitness),
             "mean_fx": float(np.mean(obj_vals)),

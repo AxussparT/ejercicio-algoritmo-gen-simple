@@ -25,7 +25,7 @@ class MainWindow:
         self.root = root
         self.root.title("Algoritmo Genético Configurable - Optimización Univariada f(x)")
         self.root.geometry("1240x820")
-        self.root.minsize(1050, 700)
+        self.root.minsize(950, 550)
         self.root.configure(bg=COLORS["bg_dark"])
 
         apply_theme(self.root)
@@ -91,6 +91,12 @@ class MainWindow:
         canvas_left.pack(side="left", fill="both", expand=True)
         scrollbar_left.pack(side="right", fill="y")
 
+        # Soporte para rueda del ratón en panel izquierdo
+        def _on_left_mousewheel(event):
+            canvas_left.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        left_container.bind("<Enter>", lambda e: canvas_left.bind_all("<MouseWheel>", _on_left_mousewheel))
+        left_container.bind("<Leave>", lambda e: canvas_left.unbind_all("<MouseWheel>"))
+
         # Insertar paneles de configuración
         self.function_panel = FunctionPanel(self.scrollable_left, on_preview_callback=self._on_preview_function)
         self.function_panel.pack(fill="x", padx=8, pady=(8, 6))
@@ -98,26 +104,53 @@ class MainWindow:
         self.hyperparams_panel = HyperparametersPanel(self.scrollable_left)
         self.hyperparams_panel.pack(fill="x", padx=8, pady=(4, 8))
 
-        # --- PANEL DERECHO: Gráficas y Métricas ---
+        # --- PANEL DERECHO: Gráficas y Métricas con Scrollbar ---
         right_container = ttk.Frame(content_pane, style="TFrame")
         right_container.pack(side="right", fill="both", expand=True, padx=(5, 0))
 
-        self.plot_panel = PlotPanel(right_container)
-        self.plot_panel.pack(fill="both", expand=True, pady=(0, 6))
+        canvas_right = tk.Canvas(right_container, bg=COLORS["bg_dark"], highlightthickness=0)
+        scrollbar_right = ttk.Scrollbar(right_container, orient="vertical", command=canvas_right.yview)
+        self.scrollable_right = ttk.Frame(canvas_right, style="TFrame")
 
-        self.metrics_panel = MetricsPanel(right_container)
-        self.metrics_panel.pack(fill="x", side="bottom")
+        window_id_right = canvas_right.create_window((0, 0), window=self.scrollable_right, anchor="nw")
+
+        def _on_right_frame_configure(event):
+            canvas_right.configure(scrollregion=canvas_right.bbox("all"))
+
+        def _on_right_canvas_configure(event):
+            # Adaptar el ancho del contenido interno al ancho disponible de la ventana
+            canvas_right.itemconfig(window_id_right, width=event.width)
+
+        self.scrollable_right.bind("<Configure>", _on_right_frame_configure)
+        canvas_right.bind("<Configure>", _on_right_canvas_configure)
+        canvas_right.configure(yscrollcommand=scrollbar_right.set)
+
+        canvas_right.pack(side="left", fill="both", expand=True)
+        scrollbar_right.pack(side="right", fill="y")
+
+        # Soporte para rueda del ratón en panel derecho
+        def _on_right_mousewheel(event):
+            canvas_right.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        right_container.bind("<Enter>", lambda e: canvas_right.bind_all("<MouseWheel>", _on_right_mousewheel))
+        right_container.bind("<Leave>", lambda e: canvas_right.unbind_all("<MouseWheel>"))
+
+        self.plot_panel = PlotPanel(self.scrollable_right)
+        self.plot_panel.pack(fill="x", expand=True, pady=(0, 6))
+
+        self.metrics_panel = MetricsPanel(self.scrollable_right)
+        self.metrics_panel.pack(fill="x", pady=(0, 10))
 
     def _initial_preview(self):
         try:
             f_data = self.function_panel.get_data()
             a, b = f_data["bounds"][0]
-            self.plot_panel.plot_preview(f_data["expression"], a, b)
+            dims = f_data.get("dimensions", 1)
+            self.plot_panel.plot_preview(f_data["expression"], a, b, dims)
         except Exception:
             pass
 
-    def _on_preview_function(self, expr: str, a: float, b: float):
-        self.plot_panel.plot_preview(expr, a, b)
+    def _on_preview_function(self, expr: str, a: float, b: float, dims: int = 1):
+        self.plot_panel.plot_preview(expr, a, b, dims)
 
     def start_optimization(self):
         """Inicia el algoritmo genético en un hilo separado."""
@@ -201,13 +234,14 @@ class MainWindow:
                     elapsed = msg["elapsed"]
                     max_gen = self.current_config["max_generations"]
                     goal = self.current_config["goal"]
-                    bounds = self.current_config["bounds"][0]
+                    bounds = self.current_config["bounds"]
+                    dims = self.current_config.get("dimensions", 1)
 
                     # Actualizar métricas
-                    status_text = f"Ejecutando... Gen {gen}/{max_gen}"
+                    status_text = f"Ejecutando... Gen {gen}/{max_gen} ({dims}D)"
                     self.metrics_panel.update_metrics(
                         status=status_text,
-                        best_x=stats["best_x"],
+                        best_x=stats.get("best_x_formatted", stats.get("best_x")),
                         best_fx=stats["best_fx"],
                         best_fitness=stats["best_fitness"],
                         current_gen=gen,
@@ -219,12 +253,12 @@ class MainWindow:
                     # Actualizar gráficas
                     self.plot_panel.update_plots(
                         expr=self.current_config["expression"],
-                        a=bounds[0],
-                        b=bounds[1],
+                        bounds=bounds,
                         population=pop,
                         best_ind=best_ind,
                         history=history,
-                        goal=goal
+                        goal=goal,
+                        dims=dims
                     )
 
                 elif msg_type == "finish":
@@ -237,7 +271,7 @@ class MainWindow:
                     status_msg = "Completado con éxito" if not results.get("stopped_early") else "Interrumpido por el usuario"
                     self.metrics_panel.update_metrics(
                         status=status_msg,
-                        best_x=results["best_x"],
+                        best_x=results.get("best_x_formatted", results["best_x"]),
                         best_fx=results["best_fx"],
                         best_fitness=results["best_fitness"],
                         current_gen=results["best_generation"],
@@ -272,5 +306,6 @@ class MainWindow:
         """Transfiere los parámetros de un experimento anterior a los paneles."""
         self.function_panel.set_data(config)
         self.hyperparams_panel.set_data(config)
-        bounds = config.get("bounds", [(-10.0, 10.0)])[0]
-        self.plot_panel.plot_preview(config.get("expression", "x**2"), bounds[0], bounds[1])
+        bounds = config.get("bounds", [(-10.0, 10.0)])
+        dims = config.get("dimensions", 1)
+        self.plot_panel.plot_preview(config.get("expression", "x**2"), bounds[0][0], bounds[0][1], dims)

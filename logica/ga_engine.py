@@ -1,6 +1,7 @@
 """
 Motor principal del Algoritmo Genético (Genetic Algorithm Engine).
 Controla el ciclo evolutivo, estadísticas generacionales y ejecución asíncrona.
+Soporta problemas en dimensiones arbitrarias (1D, 2D, ... nD).
 """
 import time
 from typing import Callable, Dict, Any, List, Optional, Tuple
@@ -46,7 +47,15 @@ class GAEngine:
         # Extraer parámetros básicos
         self.pop_size = int(config.get("pop_size", 40))
         self.max_generations = int(config.get("max_generations", 60))
-        self.bounds = config.get("bounds", [(-10.0, 10.0)])
+        self.dimensions = int(config.get("dimensions", 1))
+
+        # Configurar límites para n dimensiones
+        raw_bounds = config.get("bounds", [(-10.0, 10.0)])
+        if len(raw_bounds) == 1 and self.dimensions > 1:
+            self.bounds = [raw_bounds[0]] * self.dimensions
+        else:
+            self.bounds = list(raw_bounds)
+
         self.goal = config.get("goal", "minimize")
         self.seed = config.get("seed", None)
         
@@ -67,9 +76,9 @@ class GAEngine:
         self.replacement_method = config.get("replacement_method", "Generacional con elitismo")
         self.replacement_params = config.get("replacement_params", {})
 
-        # Evaluador de función
+        # Evaluador de función para n dimensiones
         expression = config.get("expression", "x**2")
-        self.evaluator = SafeEvaluator(expression)
+        self.evaluator = SafeEvaluator(expression, dimensions=self.dimensions)
 
         # Historial y resultados
         self.history = []
@@ -154,14 +163,12 @@ class GAEngine:
             replace_if_better = bool(p.get("replace_if_better", False))
             return crowding_replacement(current_pop, offspring, crowding_factor=cf, replace_if_better=replace_if_better)
         else:
-            # Generacional con elitismo
             n_elite = int(p.get("n_elite", 1))
             return generational_replacement_with_elitism(current_pop, offspring, n_elite=n_elite)
 
     def run(self, callback: Optional[Callable[[int, Dict[str, Any], Individual, List[Individual]], None]] = None) -> Dict[str, Any]:
         """
-        Ejecuta el algoritmo genético de forma síncrona o en hilo secundario.
-        Invoca callback(generation, stats, best_ind, population) en cada generación.
+        Ejecuta el ciclo evolutivo para n dimensiones.
         """
         self.is_running = True
         self.stop_requested = False
@@ -198,13 +205,11 @@ class GAEngine:
             # Generar descendientes
             offspring: List[Individual] = []
             
-            # Si es Steady-State, necesitamos generar exactamente n_replace hijos
             if self.replacement_method == "Steady-state":
                 n_children_needed = int(self.replacement_params.get("n_replace", 2))
             else:
                 n_children_needed = self.pop_size
 
-            # Seleccionar padres y aplicar cruce en pares
             parents = self._select_parents(pop.individuals, n_children_needed)
             for i in range(0, len(parents), 2):
                 p1 = parents[i]
@@ -223,10 +228,9 @@ class GAEngine:
             # Evaluar descendientes
             for child in mutated_offspring:
                 val = self.evaluator.evaluate(child.x)
-                child.objective_value = val
+                child.objective_value = float(val)
                 self.total_evaluations += 1
 
-            # Calcular fitness provisional para descendientes (necesario para reemplazos)
             dummy_pop = Population(size=len(mutated_offspring), bounds=self.bounds)
             dummy_pop.individuals = mutated_offspring
             dummy_pop.evaluate(self.evaluator.evaluate, goal=self.goal)
@@ -263,8 +267,15 @@ class GAEngine:
         self.execution_time = time.time() - start_time
         self.is_running = False
 
+        best_x_res = None
+        best_x_fmt = "--"
+        if self.best_global_individual:
+            best_x_res = float(self.best_global_individual.x) if len(self.best_global_individual.genes) == 1 else self.best_global_individual.x_list
+            best_x_fmt = self.best_global_individual.x_formatted
+
         return {
-            "best_x": self.best_global_individual.x if self.best_global_individual else None,
+            "best_x": best_x_res,
+            "best_x_formatted": best_x_fmt,
             "best_fx": self.best_global_individual.objective_value if self.best_global_individual else None,
             "best_fitness": self.best_global_individual.fitness if self.best_global_individual else None,
             "best_generation": self.best_global_generation,
