@@ -1,8 +1,14 @@
 """
-Diálogo modal para visualizar el historial de ejecuciones,
-cargar configuraciones previas y exportar reportes en TXT y CSV.
+Diálogo modal para visualizar el historial unificado de ejecuciones de todas las pestañas:
+- Algoritmo Genético (AG)
+- Comparativa AG vs Enjambre (PSO)
+- Diseño Automotriz Multiobjetivo (AG + PSO + NSGA-II/NSGA-III/C-TAEA/SMS-EMOA y 10 Semillas)
+
+Permite inspeccionar todos los hiperparámetros y resultados, recargar configuraciones
+en su pestaña correspondiente y exportar a CSV, TXT y JSON.
 """
 import os
+import shutil
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from typing import Callable, Dict, Any
@@ -10,44 +16,64 @@ from typing import Callable, Dict, Any
 from almacenamiento.experiment_logger import ExperimentLogger
 from ui.styles import COLORS, FONTS
 
+
 class HistoryDialog(tk.Toplevel):
     def __init__(self, parent, logger: ExperimentLogger, on_load_config_callback: Callable[[Dict[str, Any]], None]):
         super().__init__(parent)
-        self.title("Historial de Experimentos y Registros")
-        self.geometry("820x540")
+        self.title("Historial de Experimentos, Hiperparámetros y Exportación de Resultados")
+        self.geometry("980x620")
+        self.minsize(840, 500)
         self.configure(bg=COLORS["bg_dark"])
         self.transient(parent)
         self.grab_set()
 
         self.logger = logger
         self.on_load_config = on_load_config_callback
+        self.filter_var = tk.StringVar(value="Todos")
 
         self._build_ui()
         self._load_list()
 
     def _build_ui(self):
-        # Título
-        header = ttk.Frame(self, style="Card.TFrame", padding=10)
+        # Barra superior con título y filtro por tipo de experimento
+        header = ttk.Frame(self, style="Card.TFrame", padding=(12, 10))
         header.pack(fill="x")
-        ttk.Label(header, text="📋 Registro de Experimentos Ejecutados", style="Title.TLabel").pack(side="left")
+        ttk.Label(
+            header,
+            text="📋 Historial Unificado de Experimentos y Resultados",
+            style="Title.TLabel"
+        ).pack(side="left")
 
-        # Contenedor principal con dos mitades (Lista a la izquierda, Detalle a la derecha)
+        filter_box = ttk.Frame(header, style="Card.TFrame")
+        filter_box.pack(side="right")
+        ttk.Label(filter_box, text="Filtrar por módulo:", style="Card.TLabel").pack(side="left", padx=(0, 6))
+        cb_filter = ttk.Combobox(
+            filter_box,
+            textvariable=self.filter_var,
+            values=["Todos", "Algoritmo Genético (AG)", "Comparativa AG vs PSO", "Diseño Automotriz"],
+            state="readonly",
+            width=24
+        )
+        cb_filter.pack(side="left")
+        cb_filter.bind("<<ComboboxSelected>>", lambda _e: self._load_list())
+
+        # Contenedor principal dividido (Lista a la izquierda, Reporte completo a la derecha)
         main_split = ttk.Frame(self, style="TFrame", padding=10)
         main_split.pack(fill="both", expand=True)
 
-        # Panel Izquierdo: Lista de ejecuciones
-        left_frame = ttk.LabelFrame(main_split, text=" Ejecuciones Guardadas ", style="TLabelframe", padding=6)
-        left_frame.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        # Panel Izquierdo: Tabla de ejecuciones guardadas
+        left_frame = ttk.LabelFrame(main_split, text=" Ejecuciones Registradas ", style="TLabelframe", padding=6)
+        left_frame.pack(side="left", fill="both", expand=False, padx=(0, 6))
 
-        columns = ("Fecha", "Función", "Mejor f(x)")
-        self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", selectmode="browse")
+        columns = ("Fecha", "Módulo / Función", "Métrica / J(x)")
+        self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", selectmode="browse", height=18)
         self.tree.heading("Fecha", text="Fecha / Hora")
-        self.tree.heading("Función", text="Función")
-        self.tree.heading("Mejor f(x)", text="Mejor f(x)")
+        self.tree.heading("Módulo / Función", text="Módulo / Escenario / Función")
+        self.tree.heading("Métrica / J(x)", text="Mejor f(x) / J(x)")
 
-        self.tree.column("Fecha", width=140, anchor="center")
-        self.tree.column("Función", width=160, anchor="w")
-        self.tree.column("Mejor f(x)", width=100, anchor="center")
+        self.tree.column("Fecha", width=130, anchor="center")
+        self.tree.column("Módulo / Función", width=235, anchor="w")
+        self.tree.column("Métrica / J(x)", width=95, anchor="center")
 
         tree_scroll = ttk.Scrollbar(left_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=tree_scroll.set)
@@ -56,45 +82,92 @@ class HistoryDialog(tk.Toplevel):
         tree_scroll.pack(side="right", fill="y")
         self.tree.bind("<<TreeviewSelect>>", self._on_select_item)
 
-        # Panel Derecho: Visualizador del reporte TXT
-        right_frame = ttk.LabelFrame(main_split, text=" Resumen del Experimento ", style="TLabelframe", padding=6)
+        # Panel Derecho: Visualizador completo de hiperparámetros y resultados
+        right_frame = ttk.LabelFrame(
+            main_split,
+            text=" Detalle Completo (Hiperparámetros de Todos los Métodos y Resultados) ",
+            style="TLabelframe",
+            padding=6
+        )
         right_frame.pack(side="right", fill="both", expand=True, padx=(6, 0))
 
         self.txt_summary = tk.Text(
-            right_frame, wrap="word", bg=COLORS["bg_card_secondary"], fg=COLORS["fg_text"],
+            right_frame, wrap="none", bg=COLORS["bg_card_secondary"], fg=COLORS["fg_text"],
             font=FONTS["mono"], insertbackground=COLORS["primary"], relief="flat"
         )
-        txt_scroll = ttk.Scrollbar(right_frame, orient="vertical", command=self.txt_summary.yview)
-        self.txt_summary.configure(yscrollcommand=txt_scroll.set)
+        txt_scroll_y = ttk.Scrollbar(right_frame, orient="vertical", command=self.txt_summary.yview)
+        txt_scroll_x = ttk.Scrollbar(right_frame, orient="horizontal", command=self.txt_summary.xview)
+        self.txt_summary.configure(yscrollcommand=txt_scroll_y.set, xscrollcommand=txt_scroll_x.set)
 
+        txt_scroll_y.pack(side="right", fill="y")
+        txt_scroll_x.pack(side="bottom", fill="x")
         self.txt_summary.pack(side="left", fill="both", expand=True)
-        txt_scroll.pack(side="right", fill="y")
 
-        # Barra de botones inferior
+        # Barra de botones inferior con opciones de exportación
         bottom_bar = ttk.Frame(self, style="Card.TFrame", padding=10)
         bottom_bar.pack(fill="x")
 
-        self.btn_load = ttk.Button(bottom_bar, text="📥 Cargar Parámetros en UI", style="Action.TButton", command=self._load_selected)
-        self.btn_load.pack(side="left", padx=5)
+        self.btn_load = ttk.Button(
+            bottom_bar,
+            text="📥 Cargar Parámetros en Pestaña",
+            style="Action.TButton",
+            command=self._load_selected
+        )
+        self.btn_load.pack(side="left", padx=4)
 
-        self.btn_export_csv = ttk.Button(bottom_bar, text="📊 Exportar a CSV", style="Secondary.TButton", command=self._export_csv)
-        self.btn_export_csv.pack(side="left", padx=5)
+        self.btn_export_csv = ttk.Button(
+            bottom_bar,
+            text="📊 Exportar Datos / Pareto a CSV",
+            style="Secondary.TButton",
+            command=self._export_csv
+        )
+        self.btn_export_csv.pack(side="left", padx=4)
 
-        self.btn_open_txt = ttk.Button(bottom_bar, text="📄 Abrir TXT en Explorador", style="Secondary.TButton", command=self._open_txt)
-        self.btn_open_txt.pack(side="left", padx=5)
+        self.btn_export_txt = ttk.Button(
+            bottom_bar,
+            text="📝 Exportar Reporte (.TXT)",
+            style="Secondary.TButton",
+            command=self._export_txt
+        )
+        self.btn_export_txt.pack(side="left", padx=4)
 
-        ttk.Button(bottom_bar, text="Cerrar", style="Secondary.TButton", command=self.destroy).pack(side="right", padx=5)
+        self.btn_export_json = ttk.Button(
+            bottom_bar,
+            text="📦 Exportar JSON Completo",
+            style="Secondary.TButton",
+            command=self._export_json
+        )
+        self.btn_export_json.pack(side="left", padx=4)
+
+        self.btn_open_txt = ttk.Button(
+            bottom_bar,
+            text="📄 Abrir TXT",
+            style="Secondary.TButton",
+            command=self._open_txt
+        )
+        self.btn_open_txt.pack(side="left", padx=4)
+
+        ttk.Button(bottom_bar, text="Cerrar", style="Secondary.TButton", command=self.destroy).pack(side="right", padx=4)
 
     def _load_list(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
 
         experiments = self.logger.list_experiments()
+        flt = self.filter_var.get()
+
         self.exp_map = {}
         for exp in experiments:
-            run_id = exp["run_id"]
-            best_fx = exp["best_fx"]
-            fx_str = f"{best_fx:.6f}" if best_fx is not None else "--"
+            etype = exp.get("experiment_type", "ga")
+            if flt == "Algoritmo Genético (AG)" and etype != "ga":
+                continue
+            elif flt == "Comparativa AG vs PSO" and etype != "comparison":
+                continue
+            elif flt == "Diseño Automotriz" and not etype.startswith("automotive"):
+                continue
+
+            best_fx = exp.get("best_fx")
+            fx_str = f"{best_fx:.6f}" if isinstance(best_fx, (int, float)) else "--"
             item_id = self.tree.insert("", "end", values=(exp["date_readable"], exp["function"], fx_str))
             self.exp_map[item_id] = exp
 
@@ -102,6 +175,10 @@ class HistoryDialog(tk.Toplevel):
             first_item = list(self.exp_map.keys())[0]
             self.tree.selection_set(first_item)
             self._display_experiment(self.exp_map[first_item]["run_id"])
+        else:
+            self.current_run_id = None
+            self.txt_summary.delete("1.0", "end")
+            self.txt_summary.insert("1.0", "No hay registros para el filtro seleccionado.")
 
     def _on_select_item(self, event=None):
         selected = self.tree.selection()
@@ -128,9 +205,10 @@ class HistoryDialog(tk.Toplevel):
             return
         data = self.logger.load_experiment(self.current_run_id)
         config = data.get("configuration", {})
+        config["experiment_type"] = data.get("experiment_type", config.get("experiment_type", "ga"))
         if self.on_load_config:
             self.on_load_config(config)
-            messagebox.showinfo("Configuración Cargada", "La configuración del experimento ha sido transferida a la interfaz principal.")
+            messagebox.showinfo("Configuración Cargada", "Los parámetros e hiperparámetros han sido cargados en su pestaña correspondiente.")
             self.destroy()
 
     def _export_csv(self):
@@ -139,14 +217,44 @@ class HistoryDialog(tk.Toplevel):
         dest = filedialog.asksaveasfilename(
             defaultextension=".csv",
             filetypes=[("Archivos CSV", "*.csv")],
-            initialfile=f"{self.current_run_id}_evolucion.csv"
+            initialfile=f"{self.current_run_id}_resultados.csv"
         )
         if dest:
             ok = self.logger.export_history_to_csv(self.current_run_id, dest)
             if ok:
-                messagebox.showinfo("Exportación Exitosa", f"Datos generacionales exportados a:\n{dest}")
+                messagebox.showinfo("Exportación CSV Exitosa", f"Resultados exportados correctamente a:\n{dest}")
             else:
-                messagebox.showerror("Error", "No se pudo exportar el historial a CSV.")
+                messagebox.showerror("Error", "No se pudo exportar el registro a CSV.")
+
+    def _export_txt(self):
+        if not hasattr(self, "current_run_id") or not self.current_run_id:
+            return
+        dest = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Reporte de Texto", "*.txt")],
+            initialfile=f"{self.current_run_id}_reporte.txt"
+        )
+        if dest:
+            ok = self.logger.export_txt_report(self.current_run_id, dest)
+            if ok:
+                messagebox.showinfo("Exportación TXT Exitosa", f"Reporte completo con hiperparámetros y resultados guardado en:\n{dest}")
+            else:
+                messagebox.showerror("Error", "No se pudo exportar el reporte TXT.")
+
+    def _export_json(self):
+        if not hasattr(self, "current_run_id") or not self.current_run_id:
+            return
+        src_json = os.path.join(self.logger.records_dir, f"{self.current_run_id}.json")
+        if not os.path.exists(src_json):
+            return
+        dest = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("Archivo JSON", "*.json")],
+            initialfile=f"{self.current_run_id}.json"
+        )
+        if dest:
+            shutil.copyfile(src_json, dest)
+            messagebox.showinfo("Exportación JSON Exitosa", f"Registro JSON completo exportado a:\n{dest}")
 
     def _open_txt(self):
         if not hasattr(self, "current_run_id") or not self.current_run_id:

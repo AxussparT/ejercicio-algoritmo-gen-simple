@@ -1,6 +1,6 @@
 """
-Ventana Principal de la Aplicación de Algoritmo Genético.
-Diseño moderno, limpio y reactivo con ejecución en hilo secundario.
+Ventana Principal de la Aplicación de Algoritmo Genético y Enjambre de Partículas.
+Diseño moderno, limpio y reactivo con navegación por pestañas y ejecución asíncrona.
 """
 import os
 import time
@@ -16,6 +16,8 @@ from ui.components.hyperparameters_panel import HyperparametersPanel
 from ui.components.plot_panel import PlotPanel
 from ui.components.metrics_panel import MetricsPanel
 from ui.components.history_dialog import HistoryDialog
+from ui.components.comparison_panel import ComparisonPanel
+from ui.components.automotive_panel import AutomotivePanel
 
 from logica.ga_engine import GAEngine
 from almacenamiento.experiment_logger import ExperimentLogger
@@ -23,9 +25,9 @@ from almacenamiento.experiment_logger import ExperimentLogger
 class MainWindow:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Algoritmo Genético Configurable - Optimización Univariada f(x)")
-        self.root.geometry("1240x820")
-        self.root.minsize(950, 550)
+        self.root.title("Algoritmo Genético Configurable & Enjambre de Partículas (PSO)")
+        self.root.geometry("1260x840")
+        self.root.minsize(980, 580)
         self.root.configure(bg=COLORS["bg_dark"])
 
         apply_theme(self.root)
@@ -39,7 +41,7 @@ class MainWindow:
         self._build_layout()
         self._check_queue()
 
-        # Previsualizar función inicial
+        # Previsualizar función inicial en la pestaña de AG
         self.root.after(200, self._initial_preview)
 
     def _build_layout(self):
@@ -47,11 +49,11 @@ class MainWindow:
         toolbar = ttk.Frame(self.root, style="Card.TFrame", padding=(14, 10))
         toolbar.pack(fill="x", side="top", padx=10, pady=(10, 5))
 
-        title_lbl = ttk.Label(toolbar, text="🧬 ALGORITMO GENÉTICO", style="Title.TLabel")
+        title_lbl = ttk.Label(toolbar, text="🧬 ALGORITMOS EVOLUTIVOS & PSO", style="Title.TLabel")
         title_lbl.pack(side="left", padx=(0, 20))
 
-        # Botones Principales
-        self.btn_run = ttk.Button(toolbar, text="▶ Iniciar Optimización", style="Action.TButton", command=self.start_optimization)
+        # Botones Principales para Pestaña de Algoritmo Genético
+        self.btn_run = ttk.Button(toolbar, text="▶ Iniciar Optimización AG", style="Action.TButton", command=self.start_optimization)
         self.btn_run.pack(side="left", padx=(0, 8))
 
         self.btn_stop = ttk.Button(toolbar, text="⏹ Detener", style="Stop.TButton", command=self.stop_optimization, state="disabled")
@@ -62,14 +64,33 @@ class MainWindow:
 
         # Indicador derecho
         self.lbl_mode_info = ttk.Label(
-            toolbar, text="Optimización Univariada f(x) | Todos los métodos 05_hiperparametros",
+            toolbar, text="AG (1D a n-D) & Comparativa con Enjambre de Partículas (pyswarm)",
             style="Subtext.TLabel", font=FONTS["body"]
         )
         self.lbl_mode_info.pack(side="right")
 
-        # 2. Contenedor Principal (Panel Izquierdo: Configuración, Panel Derecho: Visualización)
-        content_pane = ttk.Frame(self.root, style="TFrame")
-        content_pane.pack(fill="both", expand=True, padx=10, pady=(5, 10))
+        # 2. Notebook / Pestañas Principales
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill="both", expand=True, padx=10, pady=(4, 10))
+
+        # --- PESTAÑA 1: Algoritmo Genético Completo ---
+        self.tab_ga = ttk.Frame(self.notebook, style="TFrame")
+        self.notebook.add(self.tab_ga, text="  🧬 Algoritmo Genético (AG)  ")
+
+        # --- PESTAÑA 2: Comparativa AG vs PSO (pyswarm) ---
+        self.tab_comparison = ComparisonPanel(self.notebook, logger=self.logger)
+        self.notebook.add(self.tab_comparison, text="  ⚡ Comparativa AG vs Enjambre (PSO)  ")
+
+        # --- PESTAÑA 3: Diseño Automotriz Multiobjetivo (Reto) ---
+        self.tab_automotive = AutomotivePanel(self.notebook, logger=self.logger)
+        self.notebook.add(self.tab_automotive, text="  🏎️ Diseño Automotriz Multiobjetivo  ")
+
+        # Montar contenido de Pestaña 1 (AG)
+        self._build_ga_tab(self.tab_ga)
+
+    def _build_ga_tab(self, parent_frame: ttk.Frame):
+        content_pane = ttk.Frame(parent_frame, style="TFrame")
+        content_pane.pack(fill="both", expand=True, padx=0, pady=4)
 
         # --- PANEL IZQUIERDO: Configuración con Scrollbar ---
         left_container = ttk.Frame(content_pane, style="Card.TFrame", width=420)
@@ -118,7 +139,6 @@ class MainWindow:
             canvas_right.configure(scrollregion=canvas_right.bbox("all"))
 
         def _on_right_canvas_configure(event):
-            # Adaptar el ancho del contenido interno al ancho disponible de la ventana
             canvas_right.itemconfig(window_id_right, width=event.width)
 
         self.scrollable_right.bind("<Configure>", _on_right_frame_configure)
@@ -161,6 +181,9 @@ class MainWindow:
             messagebox.showerror("Error de Configuración", str(e))
             return
 
+        # Cambiar a la pestaña de AG
+        self.notebook.select(0)
+
         # Combinar configuración
         config = {**f_data, **h_data}
 
@@ -192,7 +215,6 @@ class MainWindow:
         def step_callback(gen: int, stats: Dict[str, Any], best_ind, population):
             nonlocal last_update_t
             curr_t = time.time()
-            # Enviar actualización a la UI (en cada paso o cada 40ms para mantener suavidad)
             if (curr_t - last_update_t > 0.035) or gen == 0 or gen == engine.max_generations:
                 last_update_t = curr_t
                 pop_copy = [ind.copy() for ind in population]
@@ -208,15 +230,20 @@ class MainWindow:
                     "history": history_copy,
                     "elapsed": elapsed
                 })
-            # Pequeña pausa opcional para permitir visualización progresiva fluida
             time.sleep(0.015)
 
-        results = engine.run(callback=step_callback)
-        self.update_queue.put({
-            "type": "finish",
-            "results": results,
-            "config": config
-        })
+        try:
+            results = engine.run(callback=step_callback)
+            self.update_queue.put({
+                "type": "finish",
+                "results": results,
+                "config": config
+            })
+        except Exception as e:
+            self.update_queue.put({
+                "type": "error",
+                "error": str(e)
+            })
 
     def _check_queue(self):
         """Consume los mensajes enviados por el hilo de ejecución para actualizar Tkinter."""
@@ -285,6 +312,14 @@ class MainWindow:
                     self.btn_stop.config(state="disabled")
                     self.btn_history.config(state="normal")
 
+                elif msg_type == "error":
+                    err_text = msg.get("error", "Error desconocido")
+                    self.metrics_panel.update_metrics(status=f"Error: {err_text}")
+                    self.btn_run.config(state="normal")
+                    self.btn_stop.config(state="disabled")
+                    self.btn_history.config(state="normal")
+                    messagebox.showerror("Error en la Ejecución", err_text)
+
         except Exception:
             pass
 
@@ -303,9 +338,19 @@ class MainWindow:
         HistoryDialog(self.root, self.logger, on_load_config_callback=self._load_config_from_history)
 
     def _load_config_from_history(self, config: Dict[str, Any]):
-        """Transfiere los parámetros de un experimento anterior a los paneles."""
-        self.function_panel.set_data(config)
-        self.hyperparams_panel.set_data(config)
-        bounds = config.get("bounds", [(-10.0, 10.0)])
-        dims = config.get("dimensions", 1)
-        self.plot_panel.plot_preview(config.get("expression", "x**2"), bounds[0][0], bounds[0][1], dims)
+        """Transfiere los parámetros de un experimento anterior a la pestaña correspondiente."""
+        exp_type = config.get("experiment_type", "ga")
+
+        if exp_type == "comparison":
+            self.notebook.select(1)
+            self.tab_comparison.set_data(config)
+        elif exp_type in ("automotive", "automotive_10seeds"):
+            self.notebook.select(2)
+            self.tab_automotive.set_data(config)
+        else:
+            self.notebook.select(0)
+            self.function_panel.set_data(config)
+            self.hyperparams_panel.set_data(config)
+            bounds = config.get("bounds", [(-10.0, 10.0)])
+            dims = config.get("dimensions", 1)
+            self.plot_panel.plot_preview(config.get("expression", "x**2"), bounds[0][0], bounds[0][1], dims)

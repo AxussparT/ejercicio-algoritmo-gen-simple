@@ -78,7 +78,7 @@ class GAEngine:
 
         # Evaluador de función para n dimensiones
         expression = config.get("expression", "x**2")
-        self.evaluator = SafeEvaluator(expression, dimensions=self.dimensions)
+        self.evaluator = SafeEvaluator(expression, dimensions=self.dimensions, goal=self.goal)
 
         # Historial y resultados
         self.history = []

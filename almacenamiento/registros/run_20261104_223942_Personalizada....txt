@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261104_223942_Personalizada...
+Fecha y Hora:    2026-11-04 22:39:42
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Personalizada...
+Expresión f(x):  0.5 + ((sin(sqrt(x1**2 + x2**2)))**2 - 0.5) / (1.0 + 0.001*(x1**2 + x2**2))**2
+Dimensiones (n): 2
+Intervalo [a,b]: (-5.0, 5.0)
+Objetivo:        MINIMIZE
+Semilla:         42
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       40
+Generaciones:    60
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 2}
+Cruce:           Uniforme -> {'p_mask': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x (vector):        [0.0013934002761502324, 0.005248729934326006]
+Mejor f(x):              0.00002952
+Mejor Aptitud (Fitness): 0.20309855
+Generación del hallazgo: 57
+Evaluaciones totales:    2440
+Tiempo de ejecución:     2.3352 segundos
+Interrupción anticipada: No
+======================================================================

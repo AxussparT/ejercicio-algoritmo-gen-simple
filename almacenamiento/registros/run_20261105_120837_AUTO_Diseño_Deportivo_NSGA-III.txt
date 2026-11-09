@@ -1,0 +1,70 @@
+================================================================================
+     REPORTE DE OPTIMIZACIÓN - DISEÑO AUTOMOTRIZ MULTIOBJETIVO (AG/PSO/MOO)     
+================================================================================
+ID Ejecución:          run_20261105_120837_AUTO_Diseño_Deportivo_NSGA-III
+Fecha y Hora:          2026-11-05 12:08:37
+Escenario Ponderado:   Diseño Deportivo (Prioriza Velocidad)
+Pesos (w_v, w_c, w_$): (0.65, 0.15, 0.2)
+Desafío Final (-10%):  Inactivo (Tope estándar $315,000 MXN)
+
+--- 1. HIPERPARÁMETROS DE TODOS LOS MÉTODOS EJECUTADOS ---
+[A] ALGORITMO GENÉTICO SIMPLE (AG):
+    • Población (N): 70 | Generaciones (T): 100 | Semilla: 42
+    • Prob. Cruce (Pc): 0.85 | Prob. Mutación (Pm): 0.15
+    • Operadores: Selección=Torneo {'k': 3}, Cruce=BLX-α {'alpha': 0.45}, Mutación=No uniforme {'b': 1.8}, Reemplazo=Generacional con elitismo {'n_elite': 2}
+    • Agregación: Suma Ponderada Normalizada Min-Max + Penalización Exterior (lambda=250)
+
+[B] ENJAMBRE DE PARTÍCULAS (PSO - pyswarm):
+    • Enjambre (S): 70 | Iteraciones (T): 100 | Semilla: 42
+    • Inercia (omega): 0.5 | Cognitivo (phip): 0.5 | Social (phig): 0.5
+    • Umbrales: minstep=1e-09, minfunc=1e-09
+
+[C] ALGORITMO MULTIOBJETIVO PARETO (NSGA-III - pymoo):
+    • Algoritmo: NSGA-III | Población: 70 | Generaciones: 100 | Semilla: 42
+    • Direcciones de Referencia: Das-Dennis (n_partitions=9, 55 direcciones)
+    • Operadores MOO: Cruce=SBX (Simulated Binary Crossover) | Mutación=Polynomial Mutation (PM)
+    • Manejo de Restricciones: Principio de Dominancia con Restricciones de Deb
+
+--- 2. RESULTADOS UNIOBJETIVO (PARTE II Y III-A/B) ---
+  >>> ALGORITMO GENÉTICO (AG) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=187.76 kW, r=0.1630, a=0.9979, b=0.0563, g=3.2722, h=0.0494
+      Objetivos:   V_máx = 277.45 km/h | Consumo Pond. = 8.800 L/100km | Costo = $314,991.48 MXN
+      Desglose Consumo: 60km/h=6.73 L | 90km/h=8.43 L | 120km/h=10.80 L
+      Física y Restricciones: 0-100 km/h = 6.16 s (<=9s) | Masa = 1499.9 kg (<=1500kg) | Cd=0.252 | Efic.Térm=24.6%
+      J(x) Agregado = 0.155516 | Tiempo = 2.5330 s | Evaluaciones = 7070
+
+  >>> ENJAMBRE DE PARTÍCULAS (PSO) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=179.47 kW, r=0.1327, a=0.9881, b=0.4709, g=3.2917, h=0.1484
+      Objetivos:   V_máx = 273.59 km/h | Consumo Pond. = 7.882 L/100km | Costo = $314,999.99 MXN
+      Desglose Consumo: 60km/h=5.93 L | 90km/h=7.53 L | 120km/h=9.77 L
+      Física y Restricciones: 0-100 km/h = 6.31 s (<=9s) | Masa = 1500.0 kg (<=1500kg) | Cd=0.253 | Efic.Térm=26.1%
+      J(x) Agregado = 0.166218 | Tiempo = 0.6943 s | Evaluaciones = 7070
+
+--- 3. FRENTE DE PARETO MULTIOBJETIVO (NSGA-III - 26 SOLUCIONES NO DOMINADAS) ---
+Tiempo de ejecución MOO: 2.1871 s | Evaluaciones: 7000
+
+  >>> NSGA-III - Máxima Velocidad (Deportivo) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=175.30 kW, r=0.1420, a=0.9992, b=0.1254, g=3.5299, h=0.0890
+      Objetivos:   V_máx = 271.18 km/h | Consumo Pond. = 8.566 L/100km | Costo = $305,907.53 MXN
+      Desglose Consumo: 60km/h=6.55 L | 90km/h=8.20 L | 120km/h=10.51 L
+      Física y Restricciones: 0-100 km/h = 6.30 s (<=9s) | Masa = 1493.9 kg (<=1500kg) | Cd=0.252 | Efic.Térm=25.3%
+
+  >>> NSGA-III - Mínimo Consumo (Ecológico) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=122.75 kW, r=0.1099, a=0.9997, b=0.9214, g=3.1447, h=0.8888
+      Objetivos:   V_máx = 239.96 km/h | Consumo Pond. = 4.969 L/100km | Costo = $314,110.32 MXN
+      Desglose Consumo: 60km/h=3.50 L | 90km/h=4.70 L | 120km/h=6.39 L
+      Física y Restricciones: 0-100 km/h = 8.62 s (<=9s) | Masa = 1454.8 kg (<=1500kg) | Cd=0.252 | Efic.Térm=34.8%
+
+  >>> NSGA-III - Mínimo Costo (Económico) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=113.32 kW, r=0.1079, a=0.0073, b=0.1374, g=3.5358, h=0.0046
+      Objetivos:   V_máx = 210.08 km/h | Consumo Pond. = 8.828 L/100km | Costo = $216,115.41 MXN
+      Desglose Consumo: 60km/h=6.07 L | 90km/h=8.33 L | 120km/h=11.50 L
+      Física y Restricciones: 0-100 km/h = 8.95 s (<=9s) | Masa = 1446.9 kg (<=1500kg) | Cd=0.339 | Efic.Térm=24.9%
+
+  >>> NSGA-III - Mejor Compromiso (Rodilla Pareto) [FACTIBLE (Cumple las 4 restricciones)]
+      Variables [P, r, a, b, g, h]: P=129.83 kW, r=0.1214, a=0.9425, b=0.1592, g=2.9568, h=0.0638
+      Objetivos:   V_máx = 240.66 km/h | Consumo Pond. = 7.292 L/100km | Costo = $265,476.04 MXN
+      Desglose Consumo: 60km/h=5.28 L | 90km/h=6.93 L | 120km/h=9.24 L
+      Física y Restricciones: 0-100 km/h = 8.53 s (<=9s) | Masa = 1458.2 kg (<=1500kg) | Cd=0.256 | Efic.Térm=25.7%
+
+================================================================================

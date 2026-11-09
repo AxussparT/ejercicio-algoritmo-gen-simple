@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261104_225707_Esfera_1D_(Convexa_simple)
+Fecha y Hora:    2026-11-04 22:57:07
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Esfera 1D (Convexa simple)
+Expresión f(x):  x**2
+Dimensiones (n): 1
+Intervalo [a,b]: (-10.0, 10.0)
+Objetivo:        MINIMIZE
+Semilla:         None
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       40
+Generaciones:    60
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 2}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 -0.00000000
+Mejor f(x):              0.00000000
+Mejor Aptitud (Fitness): 101.10137681
+Generación del hallazgo: 26
+Evaluaciones totales:    2440
+Tiempo de ejecución:     2.5798 segundos
+Interrupción anticipada: No
+======================================================================

@@ -6,6 +6,7 @@ e incluye detección automática del número de dimensiones.
 import ast
 import re
 import math
+import warnings
 import numpy as np
 from typing import Callable, Union, List, Any
 
@@ -95,9 +96,11 @@ class SafeEvaluator:
     """
     Parser y evaluador seguro para funciones de n dimensiones.
     """
-    def __init__(self, expression_str: str, dimensions: int = 1):
+    def __init__(self, expression_str: str, dimensions: int = 1, goal: str = "minimize"):
         self.expression_str = expression_str.strip()
         self.dimensions = max(1, int(dimensions))
+        self.goal = goal
+        self.penalty_value = 1e12 if goal == "minimize" else -1e12
         normalized = self.expression_str.replace('^', '**')
         self._compiled_code = self._validate_and_compile(normalized)
         
@@ -132,7 +135,7 @@ class SafeEvaluator:
 
         return compile(tree, filename="<math_expression>", mode="eval")
 
-    def evaluate(self, x_input: Union[float, np.ndarray, list]) -> float:
+    def evaluate(self, x_input: Union[float, np.ndarray, list], allow_nan: bool = False) -> float:
         """
         Evalúa f(x) para un punto escalar o un vector de n dimensiones.
         """
@@ -161,19 +164,37 @@ class SafeEvaluator:
             local_scope[f'x{i+1}'] = val
             local_scope[f'x_{i+1}'] = val
 
+        fallback = float('nan') if allow_nan else self.penalty_value
+
         try:
-            result = eval(self._compiled_code, {"__builtins__": {}}, local_scope)
+            with np.errstate(all='ignore'), warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                result = eval(self._compiled_code, {"__builtins__": {}}, local_scope)
+
             if isinstance(result, (int, float, np.floating, np.integer)):
                 val = float(result)
                 if math.isnan(val) or math.isinf(val):
-                    return 1e12
+                    return fallback
                 return val
             elif isinstance(result, np.ndarray):
-                arr = np.nan_to_num(result, nan=1e12, posinf=1e12, neginf=-1e12)
-                return float(np.sum(arr))
-            return float(result)
-        except ZeroDivisionError:
-            return 1e12
+                if np.any(np.isnan(result)) or np.any(np.isinf(result)):
+                    if allow_nan:
+                        return float('nan')
+                    arr = np.nan_to_num(
+                        result,
+                        nan=self.penalty_value,
+                        posinf=self.penalty_value,
+                        neginf=self.penalty_value
+                    )
+                    return float(np.sum(arr))
+                return float(np.sum(result))
+
+            val = float(result)
+            if math.isnan(val) or math.isinf(val):
+                return fallback
+            return val
+        except (ZeroDivisionError, OverflowError, ValueError, ArithmeticError):
+            return fallback
         except Exception as e:
             raise RuntimeError(f"Error al evaluar f(x): {str(e)}")
 

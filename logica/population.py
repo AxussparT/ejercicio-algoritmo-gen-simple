@@ -50,13 +50,20 @@ class Population:
         for rank, idx in enumerate(sorted_indices, start=1):
             self.individuals[idx].rank = rank
 
-        # Calcular fitness positivo para ruleta y operadores proporcionales
-        min_v = np.min(obj_arr)
-        max_v = np.max(obj_arr)
+        # Filtrar valores penalizados (fuera de dominio, >= 1e11 en magnitud) para no distorsionar la escala de fitness
+        valid_mask = np.isfinite(obj_arr) & (np.abs(obj_arr) < 1e11)
+        valid_vals = obj_arr[valid_mask] if np.any(valid_mask) else obj_arr
+
+        min_v = np.min(valid_vals)
+        max_v = np.max(valid_vals)
         span = max_v - min_v
 
         eps = 1e-6
-        for ind in self.individuals:
+        for idx, ind in enumerate(self.individuals):
+            if not valid_mask[idx]:
+                ind.fitness = eps
+                continue
+
             if goal == "minimize":
                 # A menor f(x), mayor fitness
                 if span > 1e-12:
@@ -88,6 +95,9 @@ class Population:
         fits = np.array([ind.fitness for ind in self.individuals])
         best_ind = self.best_individual(goal)
 
+        valid_mask = np.isfinite(obj_vals) & (np.abs(obj_vals) < 1e11)
+        stat_vals = obj_vals[valid_mask] if np.any(valid_mask) else obj_vals
+
         best_x_rep = float(best_ind.x) if len(best_ind.genes) == 1 else best_ind.x_list
 
         return {
@@ -95,9 +105,9 @@ class Population:
             "best_x_formatted": best_ind.x_formatted,
             "best_fx": float(best_ind.objective_value),
             "best_fitness": float(best_ind.fitness),
-            "mean_fx": float(np.mean(obj_vals)),
-            "std_fx": float(np.std(obj_vals)),
+            "mean_fx": float(np.mean(stat_vals)),
+            "std_fx": float(np.std(stat_vals)),
             "mean_fitness": float(np.mean(fits)),
-            "min_fx": float(np.min(obj_vals)),
-            "max_fx": float(np.max(obj_vals))
+            "min_fx": float(np.min(stat_vals)),
+            "max_fx": float(np.max(stat_vals))
         }

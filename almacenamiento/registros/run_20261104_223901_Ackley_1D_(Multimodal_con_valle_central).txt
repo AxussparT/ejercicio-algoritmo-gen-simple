@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261104_223901_Ackley_1D_(Multimodal_con_valle_central)
+Fecha y Hora:    2026-11-04 22:39:01
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Ackley 1D (Multimodal con valle central)
+Expresión f(x):  -20 * exp(-0.2 * abs(x)) - exp(cos(2 * pi * x)) + 20 + e
+Dimensiones (n): 1
+Intervalo [a,b]: (-5.0, 5.0)
+Objetivo:        MINIMIZE
+Semilla:         None
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       40
+Generaciones:    60
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 2}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 -0.00000000
+Mejor f(x):              0.00000000
+Mejor Aptitud (Fitness): 3.04293890
+Generación del hallazgo: 54
+Evaluaciones totales:    2440
+Tiempo de ejecución:     2.5860 segundos
+Interrupción anticipada: No
+======================================================================

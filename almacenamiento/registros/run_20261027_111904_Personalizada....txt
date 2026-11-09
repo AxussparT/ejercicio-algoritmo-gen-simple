@@ -1,0 +1,34 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261027_111904_Personalizada...
+Fecha y Hora:    2026-10-27 11:19:04
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Personalizada...
+Expresión f(x):  x * sin(10 * pi * x) + 1
+Intervalo [a,b]: (-1.0, 2.0)
+Objetivo:        MAXIMIZE
+Semilla:         None
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       50
+Generaciones:    80
+Prob. Cruce:     0.9
+Prob. Mutación:  0.15
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Ranking lineal -> {'a_max': 1.5}
+Cruce:           BLX-α -> {'alpha': 0.6}
+Mutación:        Uniforme -> {}
+Sustitución:     Factor de crowding -> {'cf': 4}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x:                 1.85391676
+Mejor f(x):              2.83989940
+Mejor Aptitud (Fitness): 3.35344617
+Generación del hallazgo: 55
+Evaluaciones totales:    4050
+Tiempo de ejecución:     3.3622 segundos
+Interrupción anticipada: No
+======================================================================

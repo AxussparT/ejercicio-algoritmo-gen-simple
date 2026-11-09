@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261029_112152_Personalizada...
+Fecha y Hora:    2026-10-29 11:21:52
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Personalizada...
+Expresión f(x):  x1**2 + x2**2 + x3**2
+Dimensiones (n): 3
+Intervalo [a,b]: (-5.12, 5.12)
+Objetivo:        MINIMIZE
+Semilla:         42
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       50
+Generaciones:    100
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 2}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x (vector):        [6.238327255721947e-05, -6.724360390163856e-05, 3.7690929068570734e-05]
+Mejor f(x):              0.00000001
+Mejor Aptitud (Fitness): 2.31151121
+Generación del hallazgo: 93
+Evaluaciones totales:    5050
+Tiempo de ejecución:     3.7683 segundos
+Interrupción anticipada: No
+======================================================================

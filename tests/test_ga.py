@@ -50,5 +50,22 @@ class TestGAEngine(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(logger.records_dir, f"{run_id}.json")))
         self.assertTrue(os.path.exists(os.path.join(logger.records_dir, f"{run_id}.txt")))
 
+    def test_run_4d_domain_warnings(self):
+        config = {
+            "function_name": "Personalizada 4D",
+            "expression": "x1 * sin(exp(x2)) / log(x3 + x4)",
+            "dimensions": 4,
+            "bounds": [(-10.0, 10.0)] * 4,
+            "goal": "minimize",
+            "pop_size": 30,
+            "max_generations": 20,
+            "seed": 42
+        }
+        engine = GAEngine(config)
+        results = engine.run()
+        self.assertIsNotNone(results["best_fx"])
+        self.assertEqual(len(results["best_x"]), 4)
+        self.assertLess(abs(results["best_fx"]), 1e11)
+
 if __name__ == "__main__":
     unittest.main()

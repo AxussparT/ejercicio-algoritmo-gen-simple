@@ -1,0 +1,35 @@
+======================================================================
+           REPORTE DE EJECUCIÓN - ALGORITMO GENÉTICO                
+======================================================================
+ID Ejecución:    run_20261103_111631_Personalizada...
+Fecha y Hora:    2026-11-03 11:16:31
+
+--- CONFIGURACIÓN DEL PROBLEMA ---
+Función:         Personalizada...
+Expresión f(x):  x1 * sin(exp(x2)) / log(x3 + x4)
+Dimensiones (n): 4
+Intervalo [a,b]: (-10.0, 10.0)
+Objetivo:        MAXIMIZE
+Semilla:         None
+
+--- HIPERPARÁMETROS DEL ALGORITMO GENÉTICO ---
+Población:       40
+Generaciones:    60
+Prob. Cruce:     0.85
+Prob. Mutación:  0.1
+
+--- MÉTODOS EVOLUTIVOS CONFIGURADOS ---
+Selección:       Torneo -> {'k': 2}
+Cruce:           BLX-α -> {'alpha': 0.5}
+Mutación:        No uniforme -> {'b': 1.0}
+Sustitución:     Generacional con elitismo -> {'n_elite': 2}
+
+--- RESULTADOS NUMÉRICOS OBTENIDOS ---
+Mejor x (vector):        [-8.1211039320647, 9.500030641851133, 5.855970441415021, -4.857476235051676]
+Mejor f(x):              4694.28763990
+Mejor Aptitud (Fitness): 5752.70383799
+Generación del hallazgo: 59
+Evaluaciones totales:    2440
+Tiempo de ejecución:     2.3572 segundos
+Interrupción anticipada: No
+======================================================================

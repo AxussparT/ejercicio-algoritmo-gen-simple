@@ -112,3 +112,45 @@ def apply_theme(root: tk.Tk):
         foreground=COLORS["primary"],
         font=FONTS["subtitle"]
     )
+
+    # Estilos Notebook y pestañas
+    style.configure(
+        "TNotebook",
+        background=COLORS["bg_dark"],
+        borderwidth=0
+    )
+    style.configure(
+        "TNotebook.Tab",
+        background=COLORS["bg_card"],
+        foreground=COLORS["fg_subtext"],
+        padding=[14, 6],
+        font=FONTS["subtitle"],
+        borderwidth=0
+    )
+    style.map(
+        "TNotebook.Tab",
+        background=[("selected", COLORS["bg_card_secondary"]), ("active", COLORS["border"])],
+        foreground=[("selected", COLORS["primary"]), ("active", COLORS["fg_text"])]
+    )
+
+    # Estilos Treeview para tablas
+    style.configure(
+        "Treeview",
+        background=COLORS["bg_card"],
+        foreground=COLORS["fg_text"],
+        fieldbackground=COLORS["bg_card"],
+        font=FONTS["body"],
+        rowheight=26,
+        borderwidth=0
+    )
+    style.configure(
+        "Treeview.Heading",
+        background=COLORS["bg_card_secondary"],
+        foreground=COLORS["primary"],
+        font=FONTS["subtitle"],
+        relief="flat"
+    )
+    style.map(
+        "Treeview.Heading",
+        background=[("active", COLORS["border"])]
+    )
